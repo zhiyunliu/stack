@@ -2,7 +2,7 @@ package stack_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"path"
 	"path/filepath"
 	"reflect"
@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-stack/stack"
+	"github.com/zhiyunliu/stack"
 )
 
 func TestCaller(t *testing.T) {
@@ -56,7 +56,7 @@ func TestCallerMidstackInlined(t *testing.T) {
 	if got, want := c.Frame().Line, line; got != want {
 		t.Errorf("got line == %v, want line == %v", got, want)
 	}
-	if got, want := c.Frame().Function, "github.com/go-stack/stack_test.f3"; got != want {
+	if got, want := c.Frame().Function, "github.com/zhiyunliu/stack_test.f3"; got != want {
 		t.Errorf("got func name == %v, want func name == %v", got, want)
 	}
 }
@@ -91,7 +91,7 @@ func TestCallerPanic(t *testing.T) {
 				t.Errorf("sigpanic frame: got name == %v, want name == %v", got, want)
 			}
 			c1 := stack.Caller(panicIdx + 1)
-			if got, want := c1.Frame().Function, "github.com/go-stack/stack_test.TestCallerPanic"; got != want {
+			if got, want := c1.Frame().Function, "github.com/zhiyunliu/stack_test.TestCallerPanic"; got != want {
 				t.Errorf("TestCallerPanic frame: got name == %v, want name == %v", got, want)
 			}
 			if got, want := c1.Frame().Line, line; got != want {
@@ -173,7 +173,7 @@ func TestTracePanic(t *testing.T) {
 			if got, want := trace[panicIdx].Frame().Function, "runtime.sigpanic"; got != want {
 				t.Errorf("sigpanic frame: got name == %v, want name == %v", got, want)
 			}
-			if got, want := trace[panicIdx+1].Frame().Function, "github.com/go-stack/stack_test.TestTracePanic"; got != want {
+			if got, want := trace[panicIdx+1].Frame().Function, "github.com/zhiyunliu/stack_test.TestTracePanic"; got != want {
 				t.Errorf("TestTracePanic frame: got name == %v, want name == %v", got, want)
 			}
 			if got, want := trace[panicIdx+1].Frame().Line, line; got != want {
@@ -192,7 +192,7 @@ func TestTracePanic(t *testing.T) {
 	_ = *x
 }
 
-const importPath = "github.com/go-stack/stack"
+const importPath = "github.com/zhiyunliu/stack"
 
 type testType struct{}
 
@@ -233,9 +233,9 @@ func TestCallFormat(t *testing.T) {
 		{c, "func", "%#s", file},
 		{c, "func", "%d", fmt.Sprint(line)},
 		{c, "func", "%n", "TestCallFormat"},
-		{c, "func", "%+n", "github.com/go-stack/stack_test.TestCallFormat"},
+		{c, "func", "%+n", "github.com/zhiyunliu/stack_test.TestCallFormat"},
 		{c, "func", "%k", "stack_test"},
-		{c, "func", "%+k", "github.com/go-stack/stack_test"},
+		{c, "func", "%+k", "github.com/zhiyunliu/stack_test"},
 		{c, "func", "%v", fmt.Sprint(path.Base(file), ":", line)},
 		{c, "func", "%+v", fmt.Sprint(relFile, ":", line)},
 		{c, "func", "%#v", fmt.Sprint(file, ":", line)},
@@ -245,9 +245,9 @@ func TestCallFormat(t *testing.T) {
 		{c2, "meth", "%#s", file2},
 		{c2, "meth", "%d", fmt.Sprint(line2)},
 		{c2, "meth", "%n", "testType.testMethod"},
-		{c2, "meth", "%+n", "github.com/go-stack/stack_test.testType.testMethod"},
+		{c2, "meth", "%+n", "github.com/zhiyunliu/stack_test.testType.testMethod"},
 		{c2, "meth", "%k", "stack_test"},
-		{c2, "meth", "%+k", "github.com/go-stack/stack_test"},
+		{c2, "meth", "%+k", "github.com/zhiyunliu/stack_test"},
 		{c2, "meth", "%v", fmt.Sprint(path.Base(file2), ":", line2)},
 		{c2, "meth", "%+v", fmt.Sprint(relFile2, ":", line2)},
 		{c2, "meth", "%#v", fmt.Sprint(file2, ":", line2)},
@@ -408,7 +408,7 @@ func BenchmarkCallVFmt(b *testing.B) {
 	c := stack.Caller(0)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		fmt.Fprint(ioutil.Discard, c)
+		fmt.Fprint(io.Discard, c)
 	}
 }
 
@@ -416,7 +416,7 @@ func BenchmarkCallPlusVFmt(b *testing.B) {
 	c := stack.Caller(0)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		fmt.Fprintf(ioutil.Discard, "%+v", c)
+		fmt.Fprintf(io.Discard, "%+v", c)
 	}
 }
 
@@ -424,7 +424,7 @@ func BenchmarkCallSharpVFmt(b *testing.B) {
 	c := stack.Caller(0)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		fmt.Fprintf(ioutil.Discard, "%#v", c)
+		fmt.Fprintf(io.Discard, "%#v", c)
 	}
 }
 
@@ -432,7 +432,7 @@ func BenchmarkCallSFmt(b *testing.B) {
 	c := stack.Caller(0)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		fmt.Fprintf(ioutil.Discard, "%s", c)
+		fmt.Fprintf(io.Discard, "%s", c)
 	}
 }
 
@@ -440,7 +440,7 @@ func BenchmarkCallPlusSFmt(b *testing.B) {
 	c := stack.Caller(0)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		fmt.Fprintf(ioutil.Discard, "%+s", c)
+		fmt.Fprintf(io.Discard, "%+s", c)
 	}
 }
 
@@ -448,7 +448,7 @@ func BenchmarkCallSharpSFmt(b *testing.B) {
 	c := stack.Caller(0)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		fmt.Fprintf(ioutil.Discard, "%#s", c)
+		fmt.Fprintf(io.Discard, "%#s", c)
 	}
 }
 
@@ -456,7 +456,7 @@ func BenchmarkCallDFmt(b *testing.B) {
 	c := stack.Caller(0)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		fmt.Fprintf(ioutil.Discard, "%d", c)
+		fmt.Fprintf(io.Discard, "%d", c)
 	}
 }
 
@@ -464,7 +464,7 @@ func BenchmarkCallNFmt(b *testing.B) {
 	c := stack.Caller(0)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		fmt.Fprintf(ioutil.Discard, "%n", c)
+		fmt.Fprintf(io.Discard, "%n", c)
 	}
 }
 
@@ -472,7 +472,7 @@ func BenchmarkCallPlusNFmt(b *testing.B) {
 	c := stack.Caller(0)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		fmt.Fprintf(ioutil.Discard, "%+n", c)
+		fmt.Fprintf(io.Discard, "%+n", c)
 	}
 }
 
@@ -524,20 +524,20 @@ func BenchmarkTrace100(b *testing.B) {
 
 func BenchmarkCallerAndVFmt(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		fmt.Fprint(ioutil.Discard, stack.Caller(0))
+		fmt.Fprint(io.Discard, stack.Caller(0))
 	}
 }
 
 func BenchmarkTraceAndVFmt(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		fmt.Fprint(ioutil.Discard, stack.Trace())
+		fmt.Fprint(io.Discard, stack.Trace())
 	}
 }
 
 func BenchmarkTrace10AndVFmt(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
-		fmt.Fprint(ioutil.Discard, deepStack(10, b))
+		fmt.Fprint(io.Discard, deepStack(10, b))
 	}
 }
 
@@ -558,7 +558,7 @@ func BenchmarkRuntimeCallerAndFmt(b *testing.B) {
 		if i := strings.LastIndex(file, sep); i != -1 {
 			file = file[i+len(sep):]
 		}
-		fmt.Fprint(ioutil.Discard, file, ":", line)
+		fmt.Fprint(io.Discard, file, ":", line)
 	}
 }
 

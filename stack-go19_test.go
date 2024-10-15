@@ -1,4 +1,4 @@
-// +build go1.9
+//go:build go1.9
 
 package stack_test
 
@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/go-stack/stack"
+	"github.com/zhiyunliu/stack"
 )
 
 func TestCallerInlinedPanic(t *testing.T) {
@@ -38,7 +38,7 @@ func TestCallerInlinedPanic(t *testing.T) {
 			}
 
 			c1 := stack.Caller(panicIdx + 1)
-			if got, want := c1.Frame().Function, "github.com/go-stack/stack_test.inlinablePanic"; got != want {
+			if got, want := c1.Frame().Function, "github.com/zhiyunliu/stack_test.inlinablePanic"; got != want {
 				t.Errorf("TestCallerInlinedPanic frame: got name == %v, want name == %v", got, want)
 			}
 			if got, want := c1.Frame().Line, line; got != want {
