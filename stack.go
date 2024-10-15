@@ -208,20 +208,40 @@ func (cs CallStack) Format(s fmt.State, verb rune) {
 
 // Trace returns a CallStack for the current goroutine with element 0
 // identifying the calling function.
-func Trace() CallStack {
+func Trace(opts ...Option) CallStack {
+
+	opt := &options{
+		allstack: true,
+	}
+	for i := range opts {
+		opts[i](opt)
+	}
+	if opt.skip <= 1 {
+		opt.skip = 1
+	}
+	if opt.depth <= 1 {
+		opt.depth = 1
+	}
+
 	var pcs [512]uintptr
-	n := runtime.Callers(1, pcs[:])
+	n := runtime.Callers(opt.skip, pcs[:])
 
 	frames := runtime.CallersFrames(pcs[:n])
 	cs := make(CallStack, 0, n)
 
 	// Skip extra frame retrieved just to make sure the runtime.sigpanic
 	// special case is handled.
-	frame, more := frames.Next()
+	var frame runtime.Frame
+	_, more := frames.Next()
 
+	var idx int
 	for more {
+		idx++
 		frame, more = frames.Next()
 		cs = append(cs, Call{frame: frame})
+		if !opt.allstack && idx >= opt.depth {
+			break
+		}
 	}
 
 	return cs
