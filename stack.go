@@ -1,5 +1,3 @@
-// +build go1.7
-
 // Package stack implements utilities to capture, manipulate, and format call
 // stacks. It provides a simpler API than package runtime.
 //
@@ -73,22 +71,22 @@ var ErrNoFunc = errors.New("no call stack information")
 
 // Format implements fmt.Formatter with support for the following verbs.
 //
-//    %s    source file
-//    %d    line number
-//    %n    function name
-//    %k    last segment of the package path
-//    %v    equivalent to %s:%d
+//	%s    source file
+//	%d    line number
+//	%n    function name
+//	%k    last segment of the package path
+//	%v    equivalent to %s:%d
 //
 // It accepts the '+' and '#' flags for most of the verbs as follows.
 //
-//    %+s   path of source file relative to the compile time GOPATH,
-//          or the module path joined to the path of source file relative
-//          to module root
-//    %#s   full path of source file
-//    %+n   import path qualified function name
-//    %+k   full package path
-//    %+v   equivalent to %+s:%d
-//    %#v   equivalent to %#s:%d
+//	%+s   path of source file relative to the compile time GOPATH,
+//	      or the module path joined to the path of source file relative
+//	      to module root
+//	%#s   full path of source file
+//	%+n   import path qualified function name
+//	%+k   full package path
+//	%+v   equivalent to %+s:%d
+//	%#v   equivalent to %#s:%d
 func (c Call) Format(s fmt.State, verb rune) {
 	if c.frame == (runtime.Frame{}) {
 		fmt.Fprintf(s, "%%!%c(NOFUNC)", verb)
@@ -210,20 +208,40 @@ func (cs CallStack) Format(s fmt.State, verb rune) {
 
 // Trace returns a CallStack for the current goroutine with element 0
 // identifying the calling function.
-func Trace() CallStack {
+func Trace(opts ...Option) CallStack {
+
+	opt := &options{
+		allstack: true,
+	}
+	for i := range opts {
+		opts[i](opt)
+	}
+	if opt.skip <= 1 {
+		opt.skip = 1
+	}
+	if opt.depth <= 1 {
+		opt.depth = 1
+	}
+
 	var pcs [512]uintptr
-	n := runtime.Callers(1, pcs[:])
+	n := runtime.Callers(opt.skip, pcs[:])
 
 	frames := runtime.CallersFrames(pcs[:n])
 	cs := make(CallStack, 0, n)
 
 	// Skip extra frame retrieved just to make sure the runtime.sigpanic
 	// special case is handled.
-	frame, more := frames.Next()
+	var frame runtime.Frame
+	_, more := frames.Next()
 
+	var idx int
 	for more {
+		idx++
 		frame, more = frames.Next()
 		cs = append(cs, Call{frame: frame})
+		if !opt.allstack && idx >= opt.depth {
+			break
+		}
 	}
 
 	return cs
@@ -298,11 +316,11 @@ func pkgIndex(file, funcName string) int {
 // last segments of the file path to arrive at the desired package qualified
 // file path. For example, given:
 //
-//    GOPATH          /home/user
-//    import path     pkg/sub
-//    frame.File      /home/user/src/pkg/sub/file.go
-//    frame.Function  pkg/sub.Type.Method
-//    Desired return  pkg/sub/file.go
+//	GOPATH          /home/user
+//	import path     pkg/sub
+//	frame.File      /home/user/src/pkg/sub/file.go
+//	frame.Function  pkg/sub.Type.Method
+//	Desired return  pkg/sub/file.go
 //
 // It appears that we simply need to trim ".Type.Method" from frame.Function and
 // append "/" + path.Base(file).
@@ -312,19 +330,19 @@ func pkgIndex(file, funcName string) int {
 // path. In addition, the introduction of modules in Go 1.11 allows working
 // without a GOPATH. So we also must make these work right:
 //
-//    GOPATH          /home/user
-//    import path     pkg/go-sub
-//    package name    sub
-//    frame.File      /home/user/src/pkg/go-sub/file.go
-//    frame.Function  pkg/sub.Type.Method
-//    Desired return  pkg/go-sub/file.go
+//	GOPATH          /home/user
+//	import path     pkg/go-sub
+//	package name    sub
+//	frame.File      /home/user/src/pkg/go-sub/file.go
+//	frame.Function  pkg/sub.Type.Method
+//	Desired return  pkg/go-sub/file.go
 //
-//    Module path     pkg/v2
-//    import path     pkg/v2/go-sub
-//    package name    sub
-//    frame.File      /home/user/cloned-pkg/go-sub/file.go
-//    frame.Function  pkg/v2/sub.Type.Method
-//    Desired return  pkg/v2/go-sub/file.go
+//	Module path     pkg/v2
+//	import path     pkg/v2/go-sub
+//	package name    sub
+//	frame.File      /home/user/cloned-pkg/go-sub/file.go
+//	frame.Function  pkg/v2/sub.Type.Method
+//	Desired return  pkg/v2/go-sub/file.go
 //
 // We can handle all of these situations by using the package path extracted
 // from frame.Function up to, but not including, the last segment as the prefix

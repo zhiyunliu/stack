@@ -1,3 +1,3 @@
-module github.com/go-stack/stack
+module github.com/zhiyunliu/stack
 
-go 1.17
+go 1.18

@@ -1,18 +1,18 @@
-// +build go1.2
+//go:build go1.2
 
 package stack_test
 
 import (
 	"fmt"
 
-	"github.com/go-stack/stack"
+	"github.com/zhiyunliu/stack"
 )
 
 func Example_callFormat() {
 	logCaller("%+s")
 	logCaller("%v   %[1]n()")
 	// Output:
-	// github.com/go-stack/stack/format_test.go
+	// github.com/zhiyunliu/stack/format_test.go
 	// format_test.go:13   Example_callFormat()
 }
 
