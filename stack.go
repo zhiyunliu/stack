@@ -107,15 +107,15 @@ func (c Call) Format(s fmt.State, verb rune) {
 				file = file[i+len(sep):]
 			}
 		}
-		io.WriteString(s, file)
+		_, _ = io.WriteString(s, file)
 		if verb == 'v' {
 			buf := [7]byte{':'}
-			s.Write(strconv.AppendInt(buf[:1], int64(c.frame.Line), 10))
+			_, _ = s.Write(strconv.AppendInt(buf[:1], int64(c.frame.Line), 10))
 		}
 
 	case 'd':
 		buf := [6]byte{}
-		s.Write(strconv.AppendInt(buf[:0], int64(c.frame.Line), 10))
+		_, _ = s.Write(strconv.AppendInt(buf[:0], int64(c.frame.Line), 10))
 
 	case 'k':
 		name := c.frame.Function
@@ -131,7 +131,7 @@ func (c Call) Format(s fmt.State, verb rune) {
 		if s.Flag('+') {
 			start = 0
 		}
-		io.WriteString(s, name[start:end])
+		_, _ = io.WriteString(s, name[start:end])
 
 	case 'n':
 		name := c.frame.Function
@@ -145,7 +145,9 @@ func (c Call) Format(s fmt.State, verb rune) {
 				name = name[i+len(pkgSep):]
 			}
 		}
-		io.WriteString(s, name)
+		_, _ = io.WriteString(s, name)
+	case 'x':
+		fmt.Fprintf(s, "%k/%s:%d %n", c, c, c, c)
 	}
 }
 
